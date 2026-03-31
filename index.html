@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bio 20: Blood & Immunity Review</title>
+    <style>
+        :root {
+            --text-color: #000000; /* Strict Black Text */
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --primary: #2c3e50;
+            --correct: #27ae60;
+            --wrong: #c0392b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 10px;
+        }
+
+        .quiz-card {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .question-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .options-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .option-item {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .option-item:hover {
+            background: #e2e6ea;
+            border-color: var(--primary);
+        }
+
+        .option-item.selected {
+            background: #d1ecf1;
+            border-color: #0c5460;
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+            font-weight: 500;
+        }
+
+        .correct { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .wrong { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 25px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        button:disabled { background-color: #95a5a6; cursor: not-allowed; }
+
+        #progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #ddd;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        #progress-fill {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            border-radius: 5px;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Biology 20: Unit D Review</h1>
+        <p>Blood Components, Immunity, and Clotting</p>
+    </header>
+
+    <div id="progress-bar"><div id="progress-fill"></div></div>
+
+    <div id="quiz-container">
+        <div class="quiz-card">
+            <div id="question-num" style="font-weight: bold; color: #555;">Question 1 of 25</div>
+            <div class="question-text" id="question-content">Loading...</div>
+            <div class="options-list" id="options-content"></div>
+            <div id="feedback-area" class="feedback"></div>
+        </div>
+
+        <div class="controls">
+            <button id="prev-btn" onclick="changeQuestion(-1)" disabled>Previous</button>
+            <button id="submit-btn" onclick="checkAnswer()">Submit Answer</button>
+            <button id="next-btn" onclick="changeQuestion(1)" style="display:none;">Next</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const quizData = [
+        {
+            q: "A patient sustained a deep laceration. During the inflammatory response, specialized leukocytes move from the capillaries into the damaged tissue by squeezing through endothelial gaps. This is known as:",
+            options: ["Phagocytosis", "Diapedesis", "Chemotaxis", "Agglutination"],
+            correct: 1,
+            rationale: "Diapedesis (or extravasation) is the process by which white blood cells migrate through the tiny gaps in capillary walls."
+        },
+        {
+            q: "Once a leukocyte has entered the interstitial fluid, it follows a gradient of signaling molecules (cytokines) to reach the site of infection. This directional migration is called:",
+            options: ["Active transport", "Osmosis", "Chemotaxis", "Hemolysis"],
+            correct: 2,
+            rationale: "Chemotaxis is the 'chemical taxi' service where cells follow a chemical scent to the target."
+        },
+        {
+            q: "Which sequence accurately identifies the blood clotting cascade after the formation of a platelet plug?",
+            options: [
+                "Fibrinogen → Fibrin → Prothrombin → Thrombin",
+                "Thromboplastin release → Prothrombin to Thrombin → Fibrinogen to Fibrin",
+                "Hemolysis → Agglutination → Fibrin mesh",
+                "Calcium uptake → Thrombin → Platelet aggregation"
+            ],
+            correct: 1,
+            rationale: "Thromboplastin initiates the cascade, producing thrombin, which catalyzes fibrinogen into a stable fibrin mesh."
+        },
+        {
+            q: "A person with Type A- blood requires a transfusion. Which donors are safe?",
+            options: ["Type A+ or Type O+", "Type A- or Type O-", "Type AB-", "Type O+ only"],
+            correct: 1,
+            rationale: "A- is a match; O- is the universal donor. Rh- cannot receive Rh+ blood."
+        },
+        {
+            q: "Which plasma protein maintains osmotic pressure to draw water back into capillaries?",
+            options: ["Hemoglobin", "Fibrinogen", "Albumin", "Globulin"],
+            correct: 2,
+            rationale: "Albumin is the most abundant plasma protein and maintains oncotic/osmotic pressure."
+        },
+        {
+            q: "A patient with a missing thymus gland would likely show a deficiency in:",
+            options: ["Antibody production", "T-cell maturation", "Platelet plug formation", "Histamine release"],
+            correct: 1,
+            rationale: "T-lymphocytes migrate to the thymus to undergo maturation."
+        },
+        {
+            q: "Blood typing test: Agglutination with Anti-B and Anti-Rh, but NOT Anti-A. Blood type is:",
+            options: ["A+", "B-", "B+", "AB+"],
+            correct: 2,
+            rationale: "Reaction with B and Rh confirms the presence of those antigens."
+        },
+        {
+            q: "What is the specific function of the enzyme 'thrombin'?",
+            options: ["Convert prothrombin to thromboplastin", "Convert soluble fibrinogen to insoluble fibrin", "Dissolve clots", "Produce platelets"],
+            correct: 1,
+            rationale: "Thrombin is the catalyst for the final stage of the clot."
+        },
+        {
+            q: "Why is the secondary immune response faster and stronger?",
+            options: ["Macrophages are pre-sensitized", "Memory B-cells rapidly differentiate into plasma cells", "Inflammation is skipped", "Pathogens can't replicate"],
+            correct: 1,
+            rationale: "Memory cells eliminate the need for the lengthy initial identification phase."
+        },
+        {
+            q: "Why is an Rh- mother given RhoGAM?",
+            options: ["Prevent Anti-Rh antibody production", "Increase fetal oxygen", "Activate baby's antibodies", "Change baby's blood type"],
+            correct: 0,
+            rationale: "RhoGAM masks fetal Rh antigens so the mother's immune system doesn't become sensitized."
+        },
+        {
+            q: "A high eosinophil count indicates:",
+            options: ["Bacterial infection", "Parasitic worm infection or allergy", "Iron-deficiency", "Hemophilia"],
+            correct: 1,
+            rationale: "Eosinophils target large parasites and are active during allergies."
+        },
+        {
+            q: "Which cell directly destroys body cells infected by a virus?",
+            options: ["B-lymphocytes", "Cytotoxic T-cells", "Macrophages", "Suppressor T-cells"],
+            correct: 1,
+            rationale: "Cytotoxic T-cells trigger apoptosis in infected 'self' cells."
+        },
+        {
+            q: "A second exposure to an antigen is faster and stronger. This is a:",
+            options: ["Innate response", "Secondary immune response", "Passive immunity", "Erythropoiesis event"],
+            correct: 1,
+            rationale: "Immunological memory allows the adaptive system to bypass initial recognition."
+        },
+        {
+            q: "Mature erythrocytes maximize efficiency by:",
+            options: ["Gaining mitochondria", "Losing the nucleus and becoming biconcave", "Developing cilia", "Becoming spherical"],
+            correct: 1,
+            rationale: "The biconcave shape provides a high surface-area-to-volume ratio for gas exchange."
+        },
+        {
+            q: "Anaphylactic shock is caused by systemic release of:",
+            options: ["Adrenaline", "Histamine", "Insulin", "Antibodies"],
+            correct: 1,
+            rationale: "Massive histamine release causes vessels to dilate and leak, crashing blood pressure."
+        },
+        {
+            q: "Carbon Monoxide poisoning is lethal because it:",
+            options: ["Destroys WBCs", "Binds to hemoglobin more strongly than oxygen", "Causes clots", "Makes blood acidic"],
+            correct: 1,
+            rationale: "CO has a higher affinity for hemoglobin than oxygen."
+        },
+        {
+            q: "Which cell acts as the 'General' by activating B and T cells?",
+            options: ["Helper T-cell", "Suppressor T-cell", "Plasma cell", "Neutrophil"],
+            correct: 0,
+            rationale: "Helper T-cells release cytokines that coordinate the specific immune response."
+        },
+        {
+            q: "Type AB+ can safely receive blood from:",
+            options: ["Only AB+", "Only O-", "Any blood type (Universal Recipient)", "Only Rh+"],
+            correct: 2,
+            rationale: "They have A, B, and Rh antigens, so they produce no antibodies against donors."
+        },
+        {
+            q: "What is the primary role of platelets?",
+            options: ["Transporting hormones", "Initiating the clotting plug", "Phagocytosis", "Temperature regulation"],
+            correct: 1,
+            rationale: "Thrombocytes adhere to damaged vessels to stop leaks."
+        },
+        {
+            q: "Lymph nodes serve to:",
+            options: ["Filter old RBCs", "Filter lymph and house lymphocytes", "Produce platelets", "Regulate blood pressure"],
+            correct: 1,
+            rationale: "They act as security checkpoints for foreign antigens in tissue fluid."
+        },
+        {
+            q: "Which is part of the first line of defense?",
+            options: ["Plasma B-cells", "Intact skin and mucous membranes", "Cytotoxic T-cells", "Memory cells"],
+            correct: 1,
+            rationale: "Physical barriers prevent entry in the first place."
+        },
+        {
+            q: "Which ion is critically required for the conversion of prothrombin to thrombin?",
+            options: ["Iron", "Calcium (Ca2+)", "Sodium", "Potassium"],
+            correct: 1,
+            rationale: "Calcium ions are essential cofactors in the coagulation cascade."
+        },
+        {
+            q: "MHC markers are used to:",
+            options: ["Differentiate self and non-self", "Trigger clotting", "Transport glucose", "Control heart rate"],
+            correct: 0,
+            rationale: "MHC proteins act as a unique biological signature on cell surfaces."
+        },
+        {
+            q: "Pathogens replicating inside a body cell are targeted by:",
+            options: ["Antibodies", "Cell-mediated immunity (T-cells)", "Histamine", "Red blood cells"],
+            correct: 1,
+            rationale: "T-cells recognize and destroy infected cells from the inside."
+        },
+        {
+            q: "Agglutination is caused by the binding of:",
+            options: ["Platelets to fibrin", "Antibodies to antigens", "Hemoglobin to oxygen", "Thrombin to prothrombin"],
+            correct: 1,
+            rationale: "Antibodies cross-link cells into visible clumps."
+        }
+    ];
+
+    let currentIdx = 0;
+    let userAnswers = new Array(quizData.length).fill(null);
+
+    function loadQuestion() {
+        const q = quizData[currentIdx];
+        document.getElementById('question-num').innerText = `Question ${currentIdx + 1} of ${quizData.length}`;
+        document.getElementById('question-content').innerText = q.q;
+        
+        const optionsDiv = document.getElementById('options-content');
+        optionsDiv.innerHTML = '';
+        
+        q.options.forEach((opt, i) => {
+            const div = document.createElement('div');
+            div.className = 'option-item';
+            if(userAnswers[currentIdx] === i) div.classList.add('selected');
+            div.innerText = opt;
+            div.onclick = () => selectOption(i);
+            optionsDiv.appendChild(div);
+        });
+
+        document.getElementById('feedback-area').style.display = 'none';
+        document.getElementById('next-btn').style.display = userAnswers[currentIdx] !== null ? 'inline-block' : 'none';
+        document.getElementById('submit-btn').style.display = userAnswers[currentIdx] !== null ? 'none' : 'inline-block';
+        updateProgress();
+    }
+
+    function selectOption(i) {
+        if(userAnswers[currentIdx] !== null) return;
+        const items = document.querySelectorAll('.option-item');
+        items.forEach(item => item.classList.remove('selected'));
+        items[i].classList.add('selected');
+        userAnswers[currentIdx] = i;
+    }
+
+    function checkAnswer() {
+        const selected = userAnswers[currentIdx];
+        if(selected === null) { alert("Please select an answer!"); return; }
+        
+        const feedback = document.getElementById('feedback-area');
+        const correct = quizData[currentIdx].correct;
+        
+        feedback.style.display = 'block';
+        if(selected === correct) {
+            feedback.className = 'feedback correct';
+            feedback.innerText = "Correct! " + quizData[currentIdx].rationale;
+        } else {
+            feedback.className = 'feedback wrong';
+            feedback.innerText = "Incorrect. The correct answer was: " + quizData[currentIdx].options[correct] + ". " + quizData[currentIdx].rationale;
+        }
+        
+        document.getElementById('submit-btn').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'inline-block';
+    }
+
+    function changeQuestion(step) {
+        currentIdx += step;
+        document.getElementById('prev-btn').disabled = currentIdx === 0;
+        loadQuestion();
+    }
+
+    function updateProgress() {
+        const progress = ((currentIdx + 1) / quizData.length) * 100;
+        document.getElementById('progress-fill').style.width = progress + '%';
+    }
+
+    loadQuestion();
+</script>
+
+</body>
+</html>
